@@ -94,6 +94,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-student_projects/project_group_*
+student_projects/project_group_*/program
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,visualstudiocode
