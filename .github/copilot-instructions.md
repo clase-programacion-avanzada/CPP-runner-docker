@@ -53,8 +53,14 @@ docker run --rm -it -v $(pwd)/student_projects/project_group_4:/app cpp-runner-e
 # Updated priority order with proper CMake handling:
 1. CMakeLists.txt exists → run `cmake -B build .` then `make -C build`
 2. Makefile/makefile exists → run `make` directly
-3. Neither exists → g++ -std=c++23 -o program $SOURCE_FILE
+3. Neither exists → Automatically find all .cpp files and compile with g++ -std=c++23
 ```
+
+### Multi-File Compilation Improvements
+- **Smart .cpp detection**: Automatically finds and compiles all .cpp files in project directory
+- **Header inclusion**: Properly links .h files with their corresponding .cpp implementations
+- **Undefined reference resolution**: Fixed linking issues for projects with multiple source files
+- **Backward compatibility**: Still supports single-file projects as before
 
 ### CMake Integration Details
 - **Out-of-source builds**: Creates `build/` directory for clean compilation
@@ -87,12 +93,49 @@ docker run --rm -it -v $(pwd)/student_projects/project_group_4:/app cpp-runner-e
 - Modern C++ features: `std::vector`, range-based loops
 - No external dependencies beyond standard library
 
+### Multi-File Projects (project_group_2 example)
+- Multiple source files: `main.cpp`, `calculator.cpp`, `calculator.h`
+- Class-based architecture with separate implementation files
+- Automatic multi-file compilation via improved g++ detection
+- Header guards and proper include structure
+- **Build process**: Automatically detects and compiles all .cpp files together
+
+### CMake Projects (project_group_3 example)
+- Complex build configuration with `CMakeLists.txt`
+- Multiple modules: `main.cpp`, `math_utils.cpp`, `string_utils.cpp`
+- Namespace organization and utility libraries
+- Custom executable naming and build definitions
+- **Build process**: Uses out-of-source build in `build/` directory
+
 ### File Organization Conventions
 - **Headers**: Use `.h` extension, include guards
 - **Data files**: Keep alongside source in project directory
 - **Build outputs**: Generated in project root (not subdirectories) or `build/` for CMake projects
 - **Naming**: Spanish names common (educational context)
 - **CMake projects**: Source files explicitly listed in `CMakeLists.txt`
+- **Multi-file projects**: All .cpp files automatically detected and compiled together
+
+## Testing & Validation
+
+### Test Project Structure
+The project includes comprehensive test cases to validate different compilation scenarios:
+
+#### project_group_1: Simple Single-File Project
+- Single `main.cpp` with no dependencies
+- Tests basic g++ compilation workflow
+
+#### project_group_2: Multi-File Project (Header + Implementation)
+- `main.cpp` - Main program using calculator functions
+- `calculator.h` - Header with class and function declarations
+- `calculator.cpp` - Implementation of calculator functions
+- **Tests**: Multi-file g++ compilation, undefined reference resolution, automatic .cpp detection
+
+#### project_group_3: CMake Project with Multiple Modules
+- `CMakeLists.txt` - CMake configuration with C++23 standard
+- `main.cpp` - Main program testing utility libraries
+- `math_utils.h/cpp` - Mathematical utility functions with namespace
+- `string_utils.h/cpp` - String manipulation utilities with namespace
+- **Tests**: CMake build system, out-of-source builds, executable detection, complex project structure
 
 ## Cross-Platform Compatibility
 
@@ -159,6 +202,12 @@ make                     # Build Makefile project
 
 ## Recent Improvements & Troubleshooting
 
+### Multi-File Compilation Fix (September 2025)
+- **Problem Solved**: Projects with .h/.cpp file combinations no longer fail with undefined reference errors
+- **Implementation**: Enhanced `entrypoint.sh` to automatically detect and compile all .cpp files when no Makefile/CMake exists
+- **Validation**: Comprehensive test cases in project_group_2 (multi-file) and project_group_3 (CMake)
+- **Backward Compatibility**: Single-file projects continue to work as before
+
 ### CMake Integration Fixes (September 2025)
 - **Fixed CMake detection**: `entrypoint.sh` now properly runs `cmake -B build .` before `make -C build`
 - **Out-of-source builds**: All CMake projects now build in `build/` directory for cleaner organization
@@ -167,13 +216,18 @@ make                     # Build Makefile project
 
 ### Common Issues & Solutions
 
+#### Multi-File Compilation Issues (RESOLVED)
+- **Problem**: Functions declared in headers but implemented in separate .cpp files caused undefined reference errors
+- **Solution**: Enhanced g++ compilation to automatically find and compile all .cpp files in project directory
+- **Test Case**: project_group_2 validates this fix with calculator.h/calculator.cpp structure
+
 #### CMake Version Mismatch
 - **Problem**: CMakeLists.txt requires newer CMake than container provides
 - **Solution**: Either update CMakeLists.txt to use compatible version, or rebuild Docker image with latest CMake
 
 #### Undefined Reference Errors
 - **Problem**: Functions declared in headers but not implemented
-- **Solution**: Ensure all source files are listed in CMakeLists.txt or Makefile
+- **Solution**: Ensure all source files are listed in CMakeLists.txt or Makefile, or use the automatic g++ multi-file detection
 
 #### Build Directory Issues
 - **Problem**: Previous builds interfering with current compilation
@@ -188,3 +242,16 @@ echo 'deb https://apt.kitware.com/ubuntu/ jammy main' | tee /etc/apt/sources.lis
 apt-get update && \
 apt-get install -y cmake
 ```
+
+### Entrypoint.sh Multi-File Detection
+The enhanced `entrypoint.sh` now includes smart .cpp file detection for projects without build files:
+```bash
+# Find all .cpp files and compile them together
+CPP_FILES=$(find . -name "*.cpp" -type f)
+if [ -n "$CPP_FILES" ]; then
+    g++ -std=c++23 -o "$OUTPUT_BINARY" $CPP_FILES
+else
+    g++ -std=c++23 -o "$OUTPUT_BINARY" "$SOURCE_FILE"
+fi
+```
+This resolves the common "undefined reference" errors when using multiple .cpp/.h file combinations.

@@ -95,5 +95,13 @@ $RECYCLE.BIN/
 *.lnk
 
 student_projects/project_group_*/program
+student_projects/project_group_*/build
+student_projects/project_group_*/CMakeFiles
+student_projects/project_group_*/CMakeCache.txt
+student_projects/project_group_*/cmake_install.cmake
+student_projects/project_group_*/Makefile
+student_projects/project_group_*/.vscode
+student_projects/project_group_*/.history
+student_projects/project_group_*/.ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,visualstudiocode
