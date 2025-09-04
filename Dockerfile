@@ -1,6 +1,3 @@
-# File: cpp_runner/Dockerfile
-
-# Use an official Ubuntu image. It's multi-arch and will work on your Orange Pi (ARM64).
 FROM ubuntu:22.04
 
 # Avoid interactive prompts during package installation
@@ -8,7 +5,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Update package lists and install C++ compiler, make, and other build tools
 RUN apt-get update && \
-    apt-get install -y build-essential cmake && \
+    apt-get install -y build-essential wget gpg && \
+    # Install latest CMake from Kitware's official repository
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
+    echo 'deb https://apt.kitware.com/ubuntu/ jammy main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null && \
+    apt-get update && \
+    apt-get install -y cmake && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a working directory inside the container for the student's code

@@ -179,13 +179,32 @@ $env:PROJECTS_BASE_DIR='my_custom_projects'; $env:MAIN_SOURCE_FILE='server.cpp';
 ## 🛠️ Funcionalidades
 
 ### Compilación automática
-- **Con Makefile**: Si existe un `Makefile` en el proyecto, se ejecutará `make`
-- **Sin Makefile**: Se compilará directamente con `g++ -std=c++23 -o program main.cpp`
+
+El sistema detecta automáticamente el tipo de proyecto y usa el sistema de compilación apropiado:
+
+1. **Proyectos CMake**: Si existe `CMakeLists.txt`, ejecuta:
+   ```bash
+   cmake -B build .
+   make -C build
+   ```
+   - Crea un directorio `build/` para compilación fuera del código fuente
+   - Detecta automáticamente el nombre del ejecutable generado
+
+2. **Proyectos con Makefile**: Si existe `Makefile` o `makefile`, ejecuta:
+   ```bash
+   make
+   ```
+
+3. **Proyectos simples**: Si no existe ni CMakeLists.txt ni Makefile, compila directamente:
+   ```bash
+   g++ -std=c++23 -o program main.cpp
+   ```
 
 ### Herramientas incluidas
-- **Compilador**: GCC/G++ con soporte para C++23
-- **Build tools**: make, cmake
+- **Compilador**: GCC/G++ 11.4.0 con soporte completo para C++23
+- **Build tools**: make, CMake 4.1.1+ (última versión estable)
 - **Sistema**: Ubuntu 22.04 LTS
+- **CMake**: Instalado desde el repositorio oficial de Kitware para tener la última versión
 
 ## 📝 Ejemplos de uso
 
@@ -254,6 +273,51 @@ $(TARGET): $(SOURCES)
 clean:
 	rm -f $(TARGET)
 ```
+
+### Ejemplo 3: Proyecto con CMake
+```cpp
+// main.cpp
+#include "calculadora.h"
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> numeros = {1, 2, 3, 4, 5};
+    int total = 0;
+    
+    for (const auto& num : numeros) {
+        total = suma(total, num);
+    }
+    
+    std::cout << "Suma total: " << total << std::endl;
+    return 0;
+}
+```
+
+```cmake
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.22)
+project(MiProyecto)
+
+# Configurar estándar de C++
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Crear ejecutable
+add_executable(mi_programa
+    main.cpp
+    calculadora.cpp
+)
+
+# Opciones de compilación
+target_compile_options(mi_programa PRIVATE -Wall -Wextra)
+```
+
+**Características del build con CMake:**
+- Compilación fuera del código fuente (out-of-source build)
+- Archivos generados en directorio `build/`
+- Detección automática del nombre del ejecutable
+- Compatible con CMake 3.22+ hasta la última versión (4.1.1+)
 
 ## 🔧 Personalización
 
@@ -338,6 +402,33 @@ $env:MAIN_SOURCE_FILE='program.cpp'
 - Verifica la sintaxis de tu código C++
 - Asegúrate de usar características compatibles con C++23
 
+### Problemas específicos con CMake
+
+#### Error: "CMake version X.Y or higher is required"
+- **Causa**: El `CMakeLists.txt` requiere una versión de CMake más nueva
+- **Solución**: 
+  - Opción 1: Cambiar `cmake_minimum_required(VERSION X.Y)` a `cmake_minimum_required(VERSION 3.22)`
+  - Opción 2: Reconstruir la imagen Docker para obtener la última versión de CMake
+
+#### Error: "undefined reference to function"
+- **Causa**: Funciones declaradas en headers pero no implementadas, o archivos fuente no incluidos
+- **Solución**: 
+  - Verificar que todos los archivos `.cpp` estén listados en `CMakeLists.txt`
+  - Asegurar que todas las funciones declaradas tengan implementación
+
+#### Directorio build con archivos antiguos
+- **Causa**: Builds previos interfieren con la compilación actual
+- **Solución**: Los proyectos CMake ahora usan builds fuera del código fuente (out-of-source) automáticamente
+- **Limpieza manual**: Si necesitas limpiar, elimina el directorio `build/`
+
+#### Ejecutable no encontrado después de la compilación
+- **Causa**: El sistema no puede encontrar el ejecutable generado por CMake
+- **Solución**: El sistema detecta automáticamente el ejecutable en `build/`, pero puedes verificar:
+  ```bash
+  docker run --rm -it -v $(pwd)/student_projects/tu_proyecto:/app cpp-runner-env bash
+  ls -la build/
+  ```
+
 ## 🎓 Consejos para estudiantes
 
 1. **Organización**: Mantén cada proyecto en su propio directorio
@@ -351,7 +442,16 @@ $env:MAIN_SOURCE_FILE='program.cpp'
 - [Documentación oficial de Docker](https://docs.docker.com/)
 - [Guía de C++ moderno](https://en.cppreference.com/)
 - [Tutorial de Makefile](https://makefiletutorial.com/)
+- [Documentación oficial de CMake](https://cmake.org/documentation/)
 - [Buenas prácticas en C++](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+- [Instalación de CMake desde Kitware](https://apt.kitware.com/) - Para obtener la última versión
+
+## 🆕 Actualizaciones recientes (Septiembre 2025)
+
+- **CMake 4.1.1+**: Actualizado a la última versión estable desde el repositorio oficial de Kitware
+- **Builds CMake mejorados**: Ahora usa compilación fuera del código fuente (out-of-source builds)
+- **Detección automática**: Mejora en la detección del sistema de build y nombres de ejecutables
+- **Compatibilidad**: Soporte para proyectos CMake desde versión 3.22 hasta la más reciente
 
 ---
 
